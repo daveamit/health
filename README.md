@@ -1,4 +1,4 @@
-![Test](https://github.com/daveamit/health/actions/workflows/test.yml/badge.svg)
+![Test](https://github.com/daveamit/health/actions/workflows/test.yml/badge.svg) [![Maintainability](https://api.codeclimate.com/v1/badges/83fa3928547dc2f40b12/maintainability)](https://codeclimate.com/github/daveamit/health/maintainability) [![Test Coverage](https://api.codeclimate.com/v1/badges/83fa3928547dc2f40b12/test_coverage)](https://codeclimate.com/github/daveamit/health/test_coverage)
 
 # Background
 This package helps setup health check based on status of external dependencies. The idea is to add all external dependencies like database, queue connections etc, and based on their status, the health handler will return `500` or `200` response with details about all the dependencies.
