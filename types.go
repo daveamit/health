@@ -16,6 +16,7 @@ type health interface {
 	ServiceDown(name string, namespace string)
 	PrometheusScrapHandler() http.Handler
 	HealthCheckHandler() http.Handler
+	ClearItems()
 }
 
 func newHealth() health {
@@ -117,4 +118,11 @@ func (h *healthImpl) ServeHTTP(rsp http.ResponseWriter, req *http.Request) {
 	}
 
 	rsp.Write(bytes)
+}
+
+func (h *healthImpl) ClearItems() {
+	for _, h := range h.items {
+		prometheus.Unregister(h.Gauge)
+	}
+	h.items = make([]service, 0)
 }

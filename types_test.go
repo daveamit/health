@@ -7,7 +7,6 @@ import (
 )
 
 func TestEnsureItem(t *testing.T) {
-
 	hStruct := defaultHealth.(*healthImpl)
 	EnsureService("redis", "namespace_0")
 
@@ -53,10 +52,73 @@ func TestEnsureItem(t *testing.T) {
 		return
 	}
 
+	ClearItems()
 }
 
+func TestSafeNameReplacer(t *testing.T) {
+
+	SetSafeNameReplacer(NewCharacterToUnderscoreReplacer("-"))
+
+	hStruct := defaultHealth.(*healthImpl)
+	EnsureService("redis", "namespace-0")
+
+	if len(hStruct.items) != 1 {
+		t.Errorf("items must have just one item")
+		return
+	}
+
+	i := hStruct.items[0]
+	if i.Name != "redis" || i.Namespace != "namespace_0" {
+		t.Errorf("name should be redis and namespace should be namespace_0")
+		return
+	}
+
+	EnsureService("redis", "namespace-0")
+
+	if len(hStruct.items) != 1 {
+		t.Errorf("items must have just one item (ensure should not add new item)")
+		return
+	}
+
+	i = hStruct.items[0]
+	if i.Name != "redis" || i.Namespace != "namespace_0" {
+		t.Errorf("name should be redis and namespace should be namespace_0")
+		return
+	}
+
+	EnsureService("redis", "namespace-1")
+
+	if len(hStruct.items) != 2 {
+		t.Errorf("items must have just two item")
+		return
+	}
+
+	i = hStruct.items[0]
+	if i.Name != "redis" || i.Namespace != "namespace_0" {
+		t.Errorf("first element should be: redis, namespace_0")
+		return
+	}
+	i = hStruct.items[1]
+	if i.Name != "redis" || i.Namespace != "namespace_1" {
+		t.Errorf("second element should be: redis, namespace_1")
+		return
+	}
+
+	ClearItems()
+}
+func TestSafeNameReplacerGetAndSet(t *testing.T) {
+	if GetSafeNameReplacer() != safeNameReplacer {
+		t.Errorf("GetSafeNameReplacer must return safeNameReplacer")
+	}
+
+	SetSafeNameReplacer(nil)
+	if safeNameReplacer == nil {
+		t.Errorf("safeNameReplacer can't be nil, instead it should be set to a NOP")
+	}
+}
 func TestHealthCheckHandler(t *testing.T) {
 	EnsureService("redis", "namespace_0")
+	EnsureService("redis", "namespace_1")
 
 	// MUST return 500 if ServiceUp or ServiceDown was never called
 	{ // Create a request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -246,5 +308,11 @@ func TestHealthCheckHandler(t *testing.T) {
 			t.Errorf("handler returned unexpected body: got %v want %v",
 				rr.Body.String(), expected)
 		}
+	}
+}
+
+func TestPrometheusScrapHandler(t *testing.T) {
+	if PrometheusScrapHandler() == nil {
+		t.Errorf("PrometheusScrapHandler must not be nil")
 	}
 }
